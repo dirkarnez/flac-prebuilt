@@ -42,7 +42,7 @@ cmake.exe -G"MinGW Makefiles" ^
 -DCMAKE_TOOLCHAIN_FILE="%DOWNLOADS_DIR_LINUX%/PortableGit/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake" ^
 -DCMAKE_BUILD_TYPE=Release ^
 -DBUILD_PROGRAMS=ON ^
--DBUILD_EXAMPLES=OFF ^
+-DBUILD_EXAMPLES=ON ^
 -DBUILD_TESTING=OFF ^
 -DWITH_FORTIFY_SOURCE=OFF ^
 -DWITH_STACK_PROTECTOR=OFF ^
