@@ -10,6 +10,7 @@ set PYTHON_DIR=%DOWNLOADS_DIR%\python-3.7.9-amd64-portable
 set CURRENT_DIRECTORY=%~dp0
 set CURRENT_DIRECTORY_LINUX=%CURRENT_DIRECTORY:\=/%
 
+@REM git clone --recursive https://github.com/emscripten-core/emsdk.git
 SET EMSDK=%CURRENT_DIRECTORY%..\emsdk
 SET EMSDK_NODE=%EMSDK%\node\14.18.2_64bit\bin\node.exe
 SET EMSDK_PYTHON=%EMSDK%\python\3.9.2-nuget_64bit\python.exe
