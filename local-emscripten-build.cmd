@@ -5,17 +5,19 @@ cd /d %~dp0
 set DOWNLOADS_DIR=%USERPROFILE%\Downloads
 set DOWNLOADS_DIR_LINUX=%DOWNLOADS_DIR:\=/%
 
+@REM this is needed for bootstrapping emsdk
 set PYTHON_DIR=%DOWNLOADS_DIR%\python-3.7.9-amd64-portable
 
 set CURRENT_DIRECTORY=%~dp0
 set CURRENT_DIRECTORY_LINUX=%CURRENT_DIRECTORY:\=/%
 
-@REM git clone --recursive https://github.com/emscripten-core/emsdk.git
+@REM git clone --recursive https://github.com/emscripten-core/emsdk.git && cd emsdk && git checkout 3.1.25
 SET EMSDK=%CURRENT_DIRECTORY%..\emsdk
 SET EMSDK_NODE=%EMSDK%\node\14.18.2_64bit\bin\node.exe
 SET EMSDK_PYTHON=%EMSDK%\python\3.9.2-nuget_64bit\python.exe
 SET JAVA_HOME=%EMSDK%\java\8.152_64bit
 
+@REM mingw64 is still needed for searching standard library headers
 SET PATH=^
 %DOWNLOADS_DIR%\PortableGit\bin;^
 %DOWNLOADS_DIR%\x86_64-8.1.0-release-posix-seh-rt_v6-rev0;^
