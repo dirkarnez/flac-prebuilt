@@ -2,17 +2,17 @@ REM run as Administrator
 @echo off
 
 cd /d %~dp0
+set CURRENT_DIRECTORY=%~dp0
+set CURRENT_DIRECTORY_LINUX=%CURRENT_DIRECTORY:\=/%
+
 set DOWNLOADS_DIR=%USERPROFILE%\Downloads
 set DOWNLOADS_DIR_LINUX=%DOWNLOADS_DIR:\=/%
 
 @REM this is needed for bootstrapping emsdk
 set PYTHON_DIR=%DOWNLOADS_DIR%\python-3.7.9-amd64-portable
 
-set CURRENT_DIRECTORY=%~dp0
-set CURRENT_DIRECTORY_LINUX=%CURRENT_DIRECTORY:\=/%
-
 @REM git clone --recursive https://github.com/emscripten-core/emsdk.git && cd emsdk && git checkout 3.1.25
-SET EMSDK=%CURRENT_DIRECTORY%..\emsdk
+SET EMSDK=%DOWNLOADS_DIR%\emsdk
 SET EMSDK_NODE=%EMSDK%\node\14.18.2_64bit\bin\node.exe
 SET EMSDK_PYTHON=%EMSDK%\python\3.9.2-nuget_64bit\python.exe
 SET JAVA_HOME=%EMSDK%\java\8.152_64bit
@@ -32,17 +32,16 @@ SET PATH=^
 @REM -DCMAKE_TOOLCHAIN_FILE="%current_directory_linux%../emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake" ^
 @REM -DEMSCRIPTEN_ROOT="%current_directory_linux%../emsdk/upstream/emscripten" ^
 
-@REM cd /d %EMSDK% &&^
-@REM dir
-@REM .\emsdk install latest &&^
-@REM .\emsdk activate latest &&^
-@REM pause
-cd /d %current_directory% &&^
+cd /d %EMSDK% &&^
+dir
+.\emsdk install latest &&^
+.\emsdk activate latest &&^
+cd /d %CURRENT_DIRECTORY% &&^
 cmake.exe -G"MinGW Makefiles" ^
--DCMAKE_TOOLCHAIN_FILE="%DOWNLOADS_DIR_LINUX%/PortableGit/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake" ^
+-DCMAKE_TOOLCHAIN_FILE="%DOWNLOADS_DIR_LINUX%/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake" ^
 -DCMAKE_BUILD_TYPE=Release ^
--DBUILD_PROGRAMS=ON ^
--DBUILD_EXAMPLES=ON ^
+-DBUILD_PROGRAMS=OFF ^
+-DBUILD_EXAMPLES=OFF ^
 -DBUILD_TESTING=OFF ^
 -DWITH_FORTIFY_SOURCE=OFF ^
 -DWITH_STACK_PROTECTOR=OFF ^
@@ -51,8 +50,9 @@ cmake.exe -G"MinGW Makefiles" ^
 -DINSTALL_PKGCONFIG_MODULES=ON ^
 -DINSTALL_CMAKE_CONFIG_MODULE=ON ^
 -DWITH_OGG=OFF ^
--B./build &&^
-cd build &&^
+-DCMAKE_INSTALL_PREFIX="cmake-build/flac-emscripten" -B./cmake-build ^
+-B./cmake-build &&^
+cd cmake-build &&^
 cmake --build . &&^
 cmake --install . &&^
 echo "Successful build"
