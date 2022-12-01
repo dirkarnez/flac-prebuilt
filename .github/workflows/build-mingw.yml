@@ -12,34 +12,59 @@ jobs:
     runs-on: windows-2019
     env:
       libraryName: flac
-      cmakeInstallationPath: flac-installation
+      cmakeNativeInstallationPath: flac-native-installation
+      cmakeEmscriptenInstallationPath: flac-emscripten-installation
       tagName: 1.4.2
-      mingwTargetZip: flac-${{ github.ref_name }}-x86_64-posix-seh-rev0-8.1.0.zip
+      emsdkTagName: 3.1.25
+      mingwTargetZip: flac-${{ github.ref_name }}-mingw64-x86_64-posix-seh-rev0-8.1.0.zip
+      emscriptenTargetZip: flac-${{ github.ref_name }}-emscripten-emsdk-3.1.25.zip
     steps:
-      - name: git clone
+      - name: git clone flac
         shell: cmd
         run: git clone --recursive https://gitlab.xiph.org/xiph/flac.git && cd flac && git checkout ${{ env.tagName }}
         
+      - name: git clone emsdk
+        shell: cmd
+        run: git clone --recursive https://github.com/emscripten-core/emsdk.git && cd emsdk && git checkout ${{ env.emsdkTagName }}
+        
       - name: curl x86_64-8.1.0-release-posix-seh-rt_v6-rev0.7z
         shell: cmd
-        run:  cd /d ${{ github.workspace }} && curl https://github.com/2641797006/c/blob/master/GCC-zip/x86_64-8.1.0-release-posix-seh-rt_v6-rev0.7z?raw=true -L --output x86_64-8.1.0-release-posix-seh-rt_v6-rev0.7z && dir && 7z.exe x x86_64-8.1.0-release-posix-seh-rt_v6-rev0.7z
+        run: |
+          curl https://github.com/2641797006/c/blob/master/GCC-zip/x86_64-8.1.0-release-posix-seh-rt_v6-rev0.7z?raw=true -L --output x86_64-8.1.0-release-posix-seh-rt_v6-rev0.7z &&^
+          dir &&^
+          7z.exe x x86_64-8.1.0-release-posix-seh-rt_v6-rev0.7z
         
       - name: curl cmake-3.24.0-windows-x86_64.zip
         shell: cmd
-        run: cd /d ${{ github.workspace }} && curl https://github.com/Kitware/CMake/releases/download/v3.24.0/cmake-3.24.0-windows-x86_64.zip -L --output cmake-3.24.0-windows-x86_64.zip && dir && 7z.exe x cmake-3.24.0-windows-x86_64.zip
+        run: |
+          curl https://github.com/Kitware/CMake/releases/download/v3.24.0/cmake-3.24.0-windows-x86_64.zip -L --output cmake-3.24.0-windows-x86_64.zip &&^
+          dir &&^
+          7z.exe x cmake-3.24.0-windows-x86_64.zip
       
       - name: curl PortableGit-2.38.1-64-bit.7z.exe
         shell: cmd
-        run: cd /d ${{ github.workspace }} && curl https://github.com/git-for-windows/git/releases/download/v2.38.1.windows.1/PortableGit-2.38.1-64-bit.7z.exe -L --output PortableGit-2.38.1-64-bit.7z.exe && dir && 7z.exe x PortableGit-2.38.1-64-bit.7z.exe -o"PortableGit-2.38.1-64-bit"
+        run: |
+          curl https://github.com/git-for-windows/git/releases/download/v2.38.1.windows.1/PortableGit-2.38.1-64-bit.7z.exe -L --output PortableGit-2.38.1-64-bit.7z.exe &&^
+          dir &&^
+          7z.exe x PortableGit-2.38.1-64-bit.7z.exe -o"PortableGit-2.38.1-64-bit"
         
-      - name: set PATH, check mingw version, cmake generate, build and install
+      - name: curl python-3.7.9-amd64-portable.zip
+        shell: cmd
+        run: |
+          curl https://github.com/dirkarnez/python-portable/releases/download/v3.7.9/python-3.7.9-amd64-portable.zip -L --output python-3.7.9-amd64-portable.zip &&^
+          dir &&^
+          7z.exe x python-3.7.9-amd64-portable.zip -o"python-3.7.9-amd64-portable"
+    
+      - name: mingw64 build
         shell: cmd
         run: |
             set PATH=^
             ${{ github.workspace }}\mingw64;^
             ${{ github.workspace }}\mingw64\bin;^
+            ${{ github.workspace }}\python-3.7.9-amd64-portable;^
+            ${{ github.workspace }}\python-3.7.9-amd64-portable\Scripts;^
             ${{ github.workspace }}\PortableGit-2.38.1-64-bit\bin;^
-            ${{ github.workspace }}\cmake-3.24.0-windows-x86_64\bin;^
+            ${{ github.workspace }}\cmake-3.24.0-windows-x86_64\bin;
             gcc --version &&^
             cd flac &&^
             cmake.exe -G "MinGW Makefiles" ^
@@ -56,19 +81,71 @@ jobs:
             -DINSTALL_CMAKE_CONFIG_MODULE=ON ^
             -DWITH_OGG=OFF ^
             -DBUILD_SHARED_LIBS=OFF ^
-            -DCMAKE_INSTALL_PREFIX="cmake-build/${{ env.cmakeInstallationPath }}" -B./cmake-build &&^
-            cd cmake-build && cmake --build . && cmake --install . 
+            -DCMAKE_INSTALL_PREFIX="cmake-build/${{ env.cmakeNativeInstallationPath }}" -B./cmake-build &&^
+            cd cmake-build &&^
+            cmake --build . &&^
+            cmake --install .  
+            
+      - name: emscripten build
+        shell: cmd
+        run: |
+            SET EMSDK=${{ github.workspace }}\emsdk
+            SET EMSDK_NODE=%EMSDK%\node\14.18.2_64bit\bin\node.exe
+            SET EMSDK_PYTHON=%EMSDK%\python\3.9.2-nuget_64bit\python.exe
+            SET JAVA_HOME=%EMSDK%\java\8.152_64bit
+            set PATH=^
+            ${{ github.workspace }}\mingw64;^
+            ${{ github.workspace }}\mingw64\bin;^
+            ${{ github.workspace }}\python-3.7.9-amd64-portable;^
+            ${{ github.workspace }}\python-3.7.9-amd64-portable\Scripts;^
+            ${{ github.workspace }}\PortableGit-2.38.1-64-bit\bin;^
+            ${{ github.workspace }}\cmake-3.24.0-windows-x86_64\bin;^
+            %EMSDK%;^
+            %EMSDK%\upstream\emscripten;^
+            %EMSDK%\node\14.18.2_64bit\bin
+            cd /d %EMSDK% &&^
+            dir
+            .\emsdk install latest &&^
+            .\emsdk activate latest &&^
+            cd /d "${{ github.workspace }}" &&^
+            set WORKSPACE_LINUX=%CD:\=/% &&^
+            cd flac &&^
+            cmake.exe -G"MinGW Makefiles" ^
+            -DCMAKE_TOOLCHAIN_FILE="%WORKSPACE_LINUX%/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake" ^
+            -DCMAKE_BUILD_TYPE=Release ^
+            -DBUILD_PROGRAMS=OFF ^
+            -DBUILD_EXAMPLES=OFF ^
+            -DBUILD_TESTING=OFF ^
+            -DWITH_FORTIFY_SOURCE=OFF ^
+            -DWITH_STACK_PROTECTOR=OFF ^
+            -DBUILD_DOCS=OFF ^
+            -DINSTALL_MANPAGES=OFF ^
+            -DINSTALL_PKGCONFIG_MODULES=ON ^
+            -DINSTALL_CMAKE_CONFIG_MODULE=ON ^
+            -DWITH_OGG=OFF ^
+            -DCMAKE_INSTALL_PREFIX="cmake-build/${{ env.cmakeEmscriptenInstallationPath }}" -B./cmake-build ^
+            -B./cmake-build &&^
+            cd cmake-build &&^
+            cmake --build . &&^
+            cmake --install .  
             
       - name: Archive Release
         uses: thedoctor0/zip-release@master
         with:
           type: 'zip'
-          directory: "flac/cmake-build/${{ env.cmakeInstallationPath }}"
+          directory: "flac/cmake-build/${{ env.cmakeNativeInstallationPath }}"
           filename: "${{ env.mingwTargetZip }}"
+          
+      - name: Archive Release
+        uses: thedoctor0/zip-release@master
+        with:
+          type: 'zip'
+          directory: "flac/cmake-build/${{ env.cmakeEmscriptenInstallationPath }}"
+          filename: "${{ env.emscriptenTargetZip }}"
           
       - name: Release prebuilt
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "flac/cmake-build/${{ env.cmakeInstallationPath }}/${{ env.mingwTargetZip }}"
+          artifacts: "flac/cmake-build/${{ env.cmakeInstallationPath }}/${{ env.mingwTargetZip }},flac/cmake-build/${{ env.cmakeInstallationPath }}/${{ env.emscriptenTargetZip }}"
           allowUpdates: true
           token: ${{ secrets.GITHUB_TOKEN }}
