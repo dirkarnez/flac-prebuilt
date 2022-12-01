@@ -104,13 +104,11 @@ jobs:
             %EMSDK%\upstream\emscripten;^
             %EMSDK%\node\14.18.2_64bit\bin
             cd /d %EMSDK% &&^
-            dir &&^
             .\emsdk install latest &&^
             .\emsdk activate latest &&^
-            set EMSDK_LINUX=%CD:\=/% &&^
             cd /d "${{ github.workspace }}\flac" &&^
             cmake.exe -G"MinGW Makefiles" ^
-            -DCMAKE_TOOLCHAIN_FILE="%EMSDK_LINUX%/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake" ^
+            -DCMAKE_TOOLCHAIN_FILE="%EMSDK:\=/%/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake" ^
             -DCMAKE_BUILD_TYPE=Release ^
             -DBUILD_PROGRAMS=OFF ^
             -DBUILD_EXAMPLES=OFF ^
