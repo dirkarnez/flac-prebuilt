@@ -81,8 +81,8 @@ jobs:
             -DINSTALL_CMAKE_CONFIG_MODULE=ON ^
             -DWITH_OGG=OFF ^
             -DBUILD_SHARED_LIBS=OFF ^
-            -DCMAKE_INSTALL_PREFIX="cmake-build/${{ env.cmakeNativeInstallationPath }}" -B./cmake-build &&^
-            cd cmake-build &&^
+            -DCMAKE_INSTALL_PREFIX="cmake-mingw64-build/${{ env.cmakeNativeInstallationPath }}" -B./cmake-mingw64-build &&^
+            cd cmake-mingw64-build &&^
             cmake --build . &&^
             cmake --install .  
             
@@ -122,9 +122,9 @@ jobs:
             -DINSTALL_PKGCONFIG_MODULES=ON ^
             -DINSTALL_CMAKE_CONFIG_MODULE=ON ^
             -DWITH_OGG=OFF ^
-            -DCMAKE_INSTALL_PREFIX="cmake-build/${{ env.cmakeEmscriptenInstallationPath }}" -B./cmake-build ^
-            -B./cmake-build &&^
-            cd cmake-build &&^
+            -DCMAKE_INSTALL_PREFIX="cmake-emscripten-build/${{ env.cmakeEmscriptenInstallationPath }}" -B./cmake-emscripten-build ^
+            -B./cmake-emscripten-build &&^
+            cd cmake-emscripten-build &&^
             cmake --build . &&^
             cmake --install .  
             
@@ -132,19 +132,19 @@ jobs:
         uses: thedoctor0/zip-release@master
         with:
           type: 'zip'
-          directory: "flac/cmake-build/${{ env.cmakeNativeInstallationPath }}"
+          directory: "flac/cmake-mingw64-build/${{ env.cmakeNativeInstallationPath }}"
           filename: "${{ env.mingwTargetZip }}"
           
       - name: Archive Release
         uses: thedoctor0/zip-release@master
         with:
           type: 'zip'
-          directory: "flac/cmake-build/${{ env.cmakeEmscriptenInstallationPath }}"
+          directory: "flac/cmake-emscripten-build/${{ env.cmakeEmscriptenInstallationPath }}"
           filename: "${{ env.emscriptenTargetZip }}"
           
       - name: Release prebuilt
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "flac/cmake-build/${{ env.cmakeInstallationPath }}/${{ env.mingwTargetZip }},flac/cmake-build/${{ env.cmakeInstallationPath }}/${{ env.emscriptenTargetZip }}"
+          artifacts: "flac/cmake-mingw64-build/${{ env.cmakeInstallationPath }}/${{ env.mingwTargetZip }},flac/cmake-emscripten-build/${{ env.cmakeInstallationPath }}/${{ env.emscriptenTargetZip }}"
           allowUpdates: true
           token: ${{ secrets.GITHUB_TOKEN }}
